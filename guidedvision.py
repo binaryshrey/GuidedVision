@@ -16,7 +16,7 @@ Dependencies.
 - torch: inference backend
 """
 
-#!pip install -q ultralytics opencv-python matplotlib torch
+#pip install -q ultralytics opencv-python matplotlib torch
 
 import os
 
@@ -358,24 +358,24 @@ plt.ylabel("Words in Description")
 plt.title("Description Length vs Scene Complexity")
 plt.show()
 
-def usefulness_score(description, scene_info):
-    conciseness = min(1.0, 20 / max(1, len(description.split())))
-    coverage = important_object_coverage(scene_info)
-    return 0.6 * coverage + 0.4 * conciseness
+def important_object_coverage(scene_info):
+    if not scene_info:
+        return 0.0
+    important = [o for o in scene_info if o["importance"] >= 2]
+    return len(important) / len(scene_info)
 
-usefulness_scores = []
+raw_scene = spatial_reasoning_v2(detections, image_rgb.shape)
+filtered_scene = spatial_reasoning_v2(important_detections, image_rgb.shape)
 
-for n in object_counts:
-    scene_info_n = spatial_reasoning_v2(
-        important_detections[:n], image_rgb.shape
-    )
-    desc = generate_description(scene_info_n)
-    usefulness_scores.append(usefulness_score(desc, scene_info_n))
+coverage_raw = important_object_coverage(raw_scene)
+coverage_filtered = important_object_coverage(filtered_scene)
 
 plt.figure()
-plt.plot(object_counts, usefulness_scores, marker="o")
-plt.xlabel("Number of Objects Considered")
-plt.ylabel("Usefulness Score")
-plt.title("GuidedVision Usefulness vs Scene Complexity")
+plt.bar(
+    ["Without Filtering", "With Importance Filtering"],
+    [coverage_raw, coverage_filtered]
+)
+plt.ylabel("Important Object Coverage")
+plt.title("Effect of Importance Filtering")
 plt.show()
 
