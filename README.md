@@ -160,6 +160,47 @@ Instead of standard CV metrics like mAP, GuidedVision focuses on **accessibility
 
 This reflects real-world assistive technology requirements more accurately than benchmark-centric metrics.
 
+## Metrics & Analysis
+
+GuidedVision is evaluated using **accessibility-oriented system metrics** rather than traditional computer vision benchmarks such as mAP.
+
+The goal is to measure whether the system is **useful, responsive, and cognitively manageable** for a visually impaired user.
+
+### 1. End-to-End Latency
+
+We measure the total time required to process an image and generate a textual description:
+
+Latency is measured on CPU in a Google Colab environment to approximate on-device execution constraints.
+
+**Observation:**  
+Latency increases slowly with scene complexity, indicating that spatial reasoning and importance filtering add minimal overhead beyond object detection.
+
+### 2. Description Conciseness
+
+To ensure outputs remain usable for accessibility, we measure:
+
+- Number of words per generated description
+
+**Observation:**  
+Even as the number of detected objects increases, importance filtering keeps descriptions concise and focused on relevant objects.
+
+### 3. Important-Object Coverage
+
+We evaluate the fraction of described objects that belong to a predefined set of accessibility-relevant categories (e.g., person, chair, door).
+
+**Observation:**  
+Importance filtering significantly increases the proportion of relevant objects in the final description, reducing cognitive load.
+
+### Visualization
+
+The following plots are included in the accompanying notebook:
+
+- Latency vs scene complexity
+- Description length vs scene complexity
+- Important-object coverage before vs after filtering
+
+These visualizations highlight the tradeoffs between responsiveness, scene complexity, and accessibility-focused output quality.
+
 ## Limitations
 
 - Uses heuristic depth estimation
