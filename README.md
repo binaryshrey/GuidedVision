@@ -1,6 +1,6 @@
-# GuidedVision
+# GuidedVision [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/binaryshrey/GuidedVision/blob/main/GuidedVision.ipynb)
 
-### On-Device Scene Understanding for Accessibility
+### On-Device Scene Perception for Accessibility
 
 ## Overview
 
@@ -172,6 +172,49 @@ We measure the total time required to process an image and generate a textual de
 
 Latency is measured on CPU in a Google Colab environment to approximate on-device execution constraints.
 
+```
+"""
+Measure end-to-end latency:
+image → detection → reasoning → description
+"""
+
+import time
+
+def guidedvision_pipeline(image_rgb):
+    results = model(image_rgb)[0]
+
+    detections = []
+    for box in results.boxes:
+        x1, y1, x2, y2 = box.xyxy[0].tolist()
+        conf = float(box.conf[0])
+        cls = int(box.cls[0])
+        label = model.names[cls]
+
+        detections.append({
+            "label": label,
+            "confidence": conf,
+            "bbox": (x1, y1, x2, y2)
+        })
+
+    important = filter_important_objects(detections)
+    scene_info = spatial_reasoning_v2(important, image_rgb.shape)
+    description = generate_description(scene_info)
+
+    return description, scene_info
+
+    
+start = time.time()
+_ = guidedvision_pipeline(image_rgb)
+latency = time.time() - start
+
+print(f"End-to-end latency: {latency:.3f} seconds")
+
+
+0: 640x480 4 persons, 1 bus, 151.8ms
+Speed: 5.7ms preprocess, 151.8ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 480)
+End-to-end latency: 0.166 seconds
+```
+
 **Observation:**  
 Latency increases slowly with scene complexity, indicating that spatial reasoning and importance filtering add minimal overhead beyond object detection.
 
@@ -196,8 +239,14 @@ Importance filtering significantly increases the proportion of relevant objects 
 The following plots are included in the accompanying notebook:
 
 - Latency vs scene complexity
+![](https://raw.githubusercontent.com/binaryshrey/GuidedVision/refs/heads/main/assets/latencyVscene.png)
+
 - Description length vs scene complexity
+![length vs scene complexity](https://raw.githubusercontent.com/binaryshrey/GuidedVision/refs/heads/main/assets/descVscene.png)
+
 - Important-object coverage before vs after filtering
+![](https://raw.githubusercontent.com/binaryshrey/GuidedVision/refs/heads/main/assets/objCoverage.png)
+
 
 These visualizations highlight the tradeoffs between responsiveness, scene complexity, and accessibility-focused output quality.
 
